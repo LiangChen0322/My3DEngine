@@ -2,22 +2,25 @@
 //
 
 #include "stdafx.h"
-//#include <comdef.h>
 #include <Windows.h>
 #include <iostream>
+#include <fstream>
 
 #include "My3dEngine.h"
 
 #define MAX_LOADSTRING 100
 
-const int screenSize_X = 900;
-const int screenSize_Y = 600;
+const int scWidth  = 900;
+const int scHeight = 600;
+//char * disBuffer;
 
 //HBITMAP hBitmap = NULL;
-HDC         imageDC;        // the DC to hold our image
-HBITMAP     imageDisplay;       // the actual bitmap which contains the image (will be put in the DC)
-HBITMAP     imageDisplayOld;    // the DC's old bitmap (for cleanup)
-
+HDC         scDC;        // the DC to hold our image
+HBITMAP     scDisplay;       // the actual bitmap which contains the image (will be put in the DC)
+HBITMAP     scDisplayOld;    // the DC's old bitmap (for cleanup)
+//BITMAP		scBitmap = { 0, 900, 600, 2, 4, 1};
+BYTE        *scBits;
+COLORREF *disBuffer;
 
 HINSTANCE hInst;								// 当前实例
 TCHAR szTitle[MAX_LOADSTRING];					// 标题栏文本
@@ -95,10 +98,14 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	return RegisterClassEx(&wcex);
 }
 
-void loadImage(void)
+void loadImage(HWND hWnd)
 {
-	//imageDisplay = (HBITMAP)LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BITMAP1));
-	imageDisplay = (HBITMAP)LoadImage(hInst, L"bitmap1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	disBuffer = (COLORREF*)malloc(scWidth * scHeight * sizeof(COLORREF));
+	memset((void *)disBuffer, 0x33, scHeight * scWidth * sizeof(COLORREF));
+	COLORREF color = RGB(0, 255, 0);
+	for (int i = 0; i < scHeight; i += scWidth + 1) {
+		disBuffer[i] = color;
+	}
 }
 
 //
@@ -124,7 +131,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
       return FALSE;
    }
 
-   SetWindowPos(hWnd, HWND_TOP, 400, 300, screenSize_X, screenSize_Y, 0);
+   SetWindowPos(hWnd, HWND_TOP, 400, 300, scWidth, scHeight, 0);
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
@@ -136,23 +143,32 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 void MyPaint(HWND hWnd)
 {
+
 	PAINTSTRUCT 	ps;
 	HDC 			hdc;
-	BITMAP 			bitmap;
-	HDC 			hdcMem;
-	HGDIOBJ 		oldBitmap;
-
+	
 	hdc = BeginPaint(hWnd, &ps);
+	//hdc = GetDC(hWnd);
+	// Creating temp bitmap
+	HBITMAP bitmap = CreateBitmap(scWidth,  scHeight, 1, 8*4, (void *) disBuffer);
+	if (bitmap == NULL)
+		std::cout << "test";
 
-	hdcMem = CreateCompatibleDC(hdc);
-	oldBitmap = SelectObject(hdcMem, imageDisplay);
+	// Temp HDC to copy picture
+	HDC src = CreateCompatibleDC(hdc); // hdc - Device context for window, I've got earlier with GetDC(hWnd) or GetDC(NULL);
+	SelectObject(src, bitmap); // Inserting picture into our temp HDC
+	// Copy image from temp HDC to window
+	BitBlt(hdc, // Destination
+	       0,  // x and
+	       0,  // y - upper-left corner of place, where we'd like to copy
+	       scWidth, // width of the region
+	       scHeight, // height
+	       src, // source
+	       0,   // x and
+	       0,   // y of upper left corner  of part of the source, from where we'd like to copy
+	       SRCCOPY); // Defined DWORD to juct copy pixels. Watch more on msdn;
 
-	GetObject(imageDisplay, sizeof(bitmap), &bitmap);
-	BitBlt(hdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-
-	SelectObject(hdcMem, oldBitmap);
-	DeleteDC(hdcMem);
-
+	DeleteDC(src); // Deleting temp HDC
 	EndPaint(hWnd, &ps);
 }
 
@@ -192,7 +208,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_CREATE:
-		loadImage();
+		loadImage(hWnd);
 		break;
 	case WM_PAINT:
 		MyPaint(hWnd);

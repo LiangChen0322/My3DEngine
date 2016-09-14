@@ -1,5 +1,7 @@
 Debug
 ipch
 My3dEngine/Debug
-My3dEngine.sdf
-My3dEngine.v12.suo
+*.sdf
+*.v12.suo
+*.vcxproj
+*.opensdf
