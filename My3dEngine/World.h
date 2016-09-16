@@ -10,7 +10,8 @@ namespace g3 {
 class World {
 public:
 	World(unsigned int w, unsigned int h);
-	void freshFrame(void **buffer);
+	void  freshFrame(void);
+	COLORREF *getBuffer(void);
 
 private:
 	// void drawPoint(int x, int y, float z, COLORREF color);

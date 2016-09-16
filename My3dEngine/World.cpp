@@ -23,15 +23,13 @@ void g3::World::clear()
 	std::fill(depthBuffer.get(), depthBuffer.get() + (width*height), std::numeric_limits<float>::infinity());
 }
 
-void g3::World::freshFrame(void **buffer)
+void g3::World::freshFrame(void)
 {
 	clear();
 	COLORREF color = RGB(0, 0, 0);
 	int t = count % 300;
 	drawLine(t, 0, 200 + t, 200, color);
 	count += 10;
-
-	*buffer = frontBuffer;
 }
 
 void g3::World::drawLine(int x0, int y0, int x1, int y1, COLORREF c1)
@@ -39,4 +37,9 @@ void g3::World::drawLine(int x0, int y0, int x1, int y1, COLORREF c1)
 	for (int i = x0; i < x1; i++) {
 		frontBuffer[i * width + i] = c1;
 	}
+}
+
+COLORREF *g3::World::getBuffer(void)
+{
+	return frontBuffer;
 }
