@@ -4,20 +4,38 @@
 #include <Windows.h>
 #include <memory>
 #include <limits>
+#include "Camera.h"
+#include "Vertex.h"
+#include "Vec.h"
+#include "Mesh.h"
+#include "Mat.h"
 
 namespace g3 {
 
 class World {
 public:
 	World(unsigned int w, unsigned int h);
+
 	void  freshFrame(void);
 	COLORREF *getBuffer(void);
 
 private:
-	// void drawPoint(int x, int y, float z, COLORREF color);
-	// void drawLine(int x0, int y0, float z0, COLORREF c0, int x1, int y1, float z1, COLORREF c1);
-	void drawLine(int x0, int y0, int x1, int y1, COLORREF c1);
 	void clear(void);
+
+	// bool croll_event(UINT message);
+	bool key_press(UINT event);
+
+	void worldRender(void);
+	void renderAxesAndGrid(const Mat4& viewProjMat);
+	void renderWireframe(const Mat4& viewProjMat);
+
+	int mapXToWin(float x);
+	int mapYToWin(float y);
+
+	void drawPoint(PointWin point);
+	void drawLine(PointWin p0, PointWin p1);
+	void renderLine(PointWin p0, PointWin p1);
+	void triangleRender(PointWin p0, PointWin p1, PointWin p2);
 
 	/* The width of the screen. */
 	unsigned int width;
@@ -27,8 +45,12 @@ private:
 	std::unique_ptr<float[]> depthBuffer;
 
 	unsigned long targetFrameTime;
-	unsigned long startFrameTime;
-	unsigned long finishFrameTime;
+	// unsigned long startFrameTime;
+	// unsigned long finishFrameTime;
+
+	Camera       camera;
+	Light        envLight;
+	TriangleMesh cube;
 };
 
 }

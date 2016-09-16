@@ -93,7 +93,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 
-	SetTimer(hWnd, 0, 30, NULL);
+	SetTimer(hWnd, 0, 50, NULL);
 
 	return TRUE;
 }
@@ -124,8 +124,6 @@ void MyPaint(HWND hWnd)
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int wmId, wmEvent;
-	PAINTSTRUCT ps;
-	HDC hdc;
 
 	switch (message) {
 	case WM_TIMER:
