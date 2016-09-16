@@ -30,12 +30,18 @@
     <ClInclude Include="My3dEngine.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="World.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="My3dEngine.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="World.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -49,9 +55,6 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="My3dEngine.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="bitmap1.bmp">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="screen.bmp">

@@ -3,5 +3,4 @@ ipch
 My3dEngine/Debug
 *.sdf
 *.v12.suo
-*.vcxproj
 *.opensdf
