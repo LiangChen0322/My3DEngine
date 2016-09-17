@@ -9,10 +9,18 @@ g3::World::World(unsigned int w, unsigned int h):
   height {h}
 {
   depthBuffer.reset(new float[width * height]);
-  frontBuffer = (COLORREF*)malloc(width * height * sizeof(COLORREF));
-  camera = Camera { Vec3{20, 25, 0}, Vec3{-20, -23, 0}, 1200, 0};// 1208
 
   g3::loadCube(cube);
+
+  frontBuffer = (COLORREF*)malloc(width * height * sizeof(COLORREF));
+  camera.eye = Vec3{ 20, 15, 0};
+  camera.target = cube.center - camera.eye;
+  camera.ratio = 0;
+  camera.zoomFactor = 800;
+  //camera = Camera { Vec3{20, 25, 0}, Vec3{-20, -23, 0}, 1200, 0};// 1208
+
+  ambLight = {1.0, 1.0, 1.0, 1.0, Vec3{-1, -1, 0}};
+  renderCube();
 }
 
 /**
@@ -49,10 +57,15 @@ COLORREF *g3::World::getBuffer(void)
 	return frontBuffer;
 }
 
-// void g3::World::worldRender(void)
-// {
-//   for (int i; i < cube.)
-// }
+inline int g3::World::mapXToWin(float x)
+{
+  return (int)( x * camera.zoomFactor / (width/(float)height)  ) + (width / 2.0f);
+}
+
+inline int g3::World::mapYToWin(float y)
+{
+  return (int)( -y * camera.zoomFactor ) + (height / 2.0f);
+}
 
 /***************************
  * Different event pro
@@ -70,9 +83,53 @@ COLORREF *g3::World::getBuffer(void)
 // 	return TRUE;
 // }
 
-bool g3::World::key_press(UINT event)
+bool g3::World::key_press(char key)
 {
+  float zoomFactorPercent = 0.05;
+
+  switch (key) {
+    case 'a':
+    case 'A': camera.ratio += 2;
+      break;
+    case 'd':
+    case 'D': camera.ratio -= 2;
+      break;
+    case 'j':
+    case 'J':
+      if (camera.zoomFactor < 3000) camera.zoomFactor += camera.zoomFactor * zoomFactorPercent;
+      break;
+    case 'k':
+    case 'K':
+      if (camera.zoomFactor > 300) camera.zoomFactor -= camera.zoomFactor * zoomFactorPercent;
+      break;
+	default: break;
+  }
+  camera.eye[0] = 20 * std::cos(camera.ratio * PI);
+  camera.eye[2] = 20 * std::sin(camera.ratio * PI);
+  camera.target = cube.center - camera.eye;
+
 	return TRUE;
+}
+
+void g3::World::renderCube(void)
+{
+  Vec3 dir = ambLight.direction;
+  float ldir = std::sqrt(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]);
+
+  for (int i = 0; i < cube.nVertices; i++) {
+    Vec3 N = cube.vertices[i].pos - cube.center;
+    float ln = std::sqrt(N[0] * N[0] + N[1] * N[1] + N[2] * N[2]);
+
+    float cos = -dotProduct(N, ambLight.direction) / (ln * ldir);
+    cos = (cos + 1) / 2;
+
+    int r = GetRValue(cube.vertices[i].color) * cos * ambLight.R;
+    int g = GetGValue(cube.vertices[i].color) * cos * ambLight.G;
+    int b = GetBValue(cube.vertices[i].color) * cos * ambLight.B;
+
+    cube.vertices[i].color = RGB(r, g, b);
+    //cube.vertices[i].color = RGB(0xFF, 0xFF, 0xFF);
+  }
 }
 
 void g3::World::renderAxesAndGrid(const g3::Mat4& viewProjMat)
@@ -112,7 +169,7 @@ void g3::World::renderWireframe(const g3::Mat4& viewProjMatrix)
   for (unsigned int i = 0; i < cube.nFaces; i++) {
     float ans = dotProduct( cube.vertices[ cube.faces[i].vertexIndex[0] ].pos - camera.eye, cube.faces[i].normal);
 
-    if (ans <= 0.0) {
+    if (ans < 0.0) {
       Vec3 v[3];
       int mapToWin[6];
       //unsigned long color[3];
@@ -134,16 +191,6 @@ void g3::World::renderWireframe(const g3::Mat4& viewProjMatrix)
       triangleRender(pw[0], pw[1], pw[2]);
     }
   }
-}
-
-inline int g3::World::mapXToWin(float x)
-{
-	return (int)( x * camera.zoomFactor / (width/(float)height)  ) + (width / 2.0f);
-}
-
-inline int g3::World::mapYToWin(float y)
-{
-	return (int)( -y * camera.zoomFactor ) + (height / 2.0f);
 }
 
 /**
@@ -268,9 +315,9 @@ void g3::World::triangleRender(PointWin p0, PointWin p1, PointWin p2)
   float sr1, er1, dr1, sg1, eg1, dg1, sb1, eb1, db1;
 
   for (int i = 0; i < 3; i++) {
-    rgb[i][0] = (float)GetRValue(color[0]); // red
-    rgb[i][1] = (float)GetGValue(color[1]); // blue
-    rgb[i][2] = (float)GetBValue(color[2]); // green
+    rgb[i][0] = (float)GetRValue(color[i]); // red
+    rgb[i][1] = (float)GetGValue(color[i]); // blue
+    rgb[i][2] = (float)GetBValue(color[i]); // green
   }
 
   /* sort by y position */
@@ -377,10 +424,15 @@ void g3::World::triangleRender(PointWin p0, PointWin p1, PointWin p2)
     sr1 += dr1; sg1 += dg1; sb1 += db1;
   } // end for (int y = sy; y < ey0; y++)
 
+  // if (c0 != color[v1] || c1 != color[v2]) {
+  //   int i = 0;
+  //   c0 = color[v1];
+  // }
+  c0 = color[v1];
+
   if (ey0 != ey1) {
     triangleRender(PointWin{(int)x0, (int)ey0, z0, c0},
                    PointWin{(int)x1, (int)ey0, z1, c1},
                    PointWin{(int)ex1, (int)ey1, ez1, color[v2]});
-    // GourandRender(x0, ey0, z0, c0, x1, ey0, z1, c1, ex1, ey1, ez1, color[v2]);
   }
 }

@@ -3,6 +3,7 @@
 #define CAMERA_H
 
 #include "Vec.h"
+#include <Windows.h>
 
 namespace g3 {
 
@@ -21,6 +22,12 @@ struct Light {
   Vec3 pos;
   Vec3 target;
   int angle;
+};
+
+struct AmbientLight {
+	float R, G, B;
+	float DiffuseIntensity;
+	Vec3  direction;
 };
 
 } // namespace g3

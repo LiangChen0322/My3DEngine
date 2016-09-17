@@ -18,12 +18,11 @@ public:
 
 	void  freshFrame(void);
 	COLORREF *getBuffer(void);
+	// bool croll_event(UINT message);
+	bool key_press(char key);
 
 private:
 	void clear(void);
-
-	// bool croll_event(UINT message);
-	bool key_press(UINT event);
 
 	void worldRender(void);
 	void renderAxesAndGrid(const Mat4& viewProjMat);
@@ -36,6 +35,8 @@ private:
 	void drawLine(PointWin p0, PointWin p1);
 	void renderLine(PointWin p0, PointWin p1);
 	void triangleRender(PointWin p0, PointWin p1, PointWin p2);
+
+	void renderCube(void);
 
 	/* The width of the screen. */
 	unsigned int width;
@@ -50,6 +51,7 @@ private:
 
 	Camera       camera;
 	Light        envLight;
+	AmbientLight ambLight;
 	TriangleMesh cube;
 };
 
