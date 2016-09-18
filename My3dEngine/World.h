@@ -12,6 +12,12 @@
 
 namespace g3 {
 
+typedef struct _TexImage {
+	COLORREF *buffer;
+	int width;
+	int height;
+} TexImage;
+
 class World {
 public:
 	World(unsigned int w, unsigned int h);
@@ -33,8 +39,12 @@ private:
 
 	void drawPoint(PointWin point);
 	void drawLine(PointWin p0, PointWin p1);
+
 	void renderLine(PointWin p0, PointWin p1);
 	void triangleRender(PointWin p0, PointWin p1, PointWin p2);
+
+	void loadTexImage(TexImage &image);
+	void displayTexImage(void);
 
 	void renderCube(void);
 
@@ -53,6 +63,7 @@ private:
 	Light        envLight;
 	AmbientLight ambLight;
 	TriangleMesh cube;
+	TexImage     texImage;
 };
 
 }

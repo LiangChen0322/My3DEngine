@@ -129,7 +129,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_TIMER:
 		world.freshFrame();
 		InvalidateRect(hWnd, NULL, TRUE);
-		//std::cout << "Timer trigger" << std::endl;
 		break;
 	case WM_COMMAND:
 		wmId    = LOWORD(wParam);
@@ -156,9 +155,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		break;
 	case WM_KEYDOWN: {
-		// wchar_t a[5] = { 0 };
-		// a[0] = wParam;
-		// MessageBoxW(hWnd, L"", a, 0);
 		world.key_press((char)wParam);
 		break;
 	}

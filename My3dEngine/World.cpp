@@ -11,6 +11,7 @@ g3::World::World(unsigned int w, unsigned int h):
   depthBuffer.reset(new float[width * height]);
 
   g3::loadCube(cube);
+  loadTexImage(texImage);
 
   frontBuffer = (COLORREF*)malloc(width * height * sizeof(COLORREF));
   camera.eye = Vec3{ 20, 15, 0};
@@ -21,6 +22,7 @@ g3::World::World(unsigned int w, unsigned int h):
 
   ambLight = {1.0, 1.0, 1.0, 1.0, Vec3{-1, -1, 0}};
   renderCube();
+  loadTexImage(texImage);
 }
 
 /**
@@ -50,6 +52,7 @@ void g3::World::freshFrame(void)
 
   renderAxesAndGrid(viewProjMatrix);
   renderWireframe(viewProjMatrix);
+  displayTexImage();
 }
 
 COLORREF *g3::World::getBuffer(void)
@@ -191,6 +194,112 @@ void g3::World::renderWireframe(const g3::Mat4& viewProjMatrix)
       triangleRender(pw[0], pw[1], pw[2]);
     }
   }
+}
+
+/*******************
+ * load texture image
+ *******************/
+void g3::World::loadTexImage(TexImage &image)
+{
+  image.width = 400;
+  image.height = 400;
+  image.buffer = (COLORREF *)malloc(400 * 400 * sizeof(COLORREF));
+
+  COLORREF black = RGB(0x33, 0x33, 0x33);
+  COLORREF white = RGB(0xDD, 0xDD, 0xDD);
+  for (int i = 0; i < 400; i++) {
+    int t = i * 400;
+    if ((i / 20) % 2 == 0) {
+      for (int j = 0; j < 400; j += 40) {
+        for (int k = 0; k < 20; k++) { image.buffer[t++] = black; }
+        for (int k = 0; k < 20; k++) { image.buffer[t++] = white; }
+      }
+    } else {
+      for (int j = 0; j < 400; j += 40) {
+        for (int k = 0; k < 20; k++) { image.buffer[t++] = white; }
+        for (int k = 0; k < 20; k++) { image.buffer[t++] = black; }
+      }
+    }
+  }
+}
+
+void g3::World::displayTexImage(void)
+{
+  for (int i = 0; i < 400; i++) {
+    int t = i * 400;
+	for (int j = 0; j < 400; j++) {
+	  drawPoint(PointWin{ i, j, 0.5, texImage.buffer[t++] });
+    }
+  }
+}
+
+int g3::World::mapTexCoord() {
+  mapTexTriangle();
+}
+
+COLORREF g3::World::mapTexLine(int wx0, int wy0, int wx1, int wy1,
+                           int tx0, int ty0, int tx1, int ty1)
+{
+  int steps = std::abs(wy1 - wy0) > std::abs(wx1 - wx0) ? std::abs(wy1 - wy0) : std::abs(wx1 - wx0);
+  float dwx = (float)(wx1 - wx0) / steps;
+  float dwy = (float)(wy1 - wy0) / steps;
+  float dtx = (float)(ts1 - ts0) / steps;
+  float dty = (float)(ty1 - ty0) / steps;
+
+  float wx = wx0;
+  float wy = wy0;
+  float tx = tx0;
+  float ty = ty0;
+
+  for (int i = 0; i < steps; i++) {
+    if ((wx >= 0) && (wy >= 0) && (wx < width) && (wy < height)) {
+      int win_index = (int)(wy * width + wx);
+      int tex_index = (int)(ty * texImag.width + tx);
+      frontBuffer[win_index] = texImag[tex_index];
+    }
+    wx += dwx; wy += dwy;
+    tx += dtx; ty += dty;
+  }
+}
+
+COLORREF g3::World::mapTexTriangle(PointWin p0, PointWin p1, PointWin p2, int num)
+{
+  // int cTex[3][2];
+
+  // cTex[0][0] = 100;
+  // cTex[0][1] = 100;
+  // cTex[1][0] = 100;
+  // cTex[1][1] = 120;
+  // cTex[2][0] = 120;
+  // cTex[2][1] = 120;
+
+  int ox = p0.x;
+  int oy = p0.y;
+  float wx = (float)p1.x;
+  float wy = (float)p1.y;
+  int steps = std::abs(p2.x - p1.x) > std::abs(p2.y - p1.y) ? std::abs(p2.x - p1.x) : std::abs(p2.y - p1.y);
+  float dx = (float)(p2.x - p1.x) / steps;
+  float dy = (float)(p2.y - p1.y) / steps;
+
+  float len = std::sqrt((float)((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y)));
+  float prop = 0.0;
+  for (int i = 0; i < steps; i++) {
+    mapTexLine(p0.x, p0.y, wx, wy, 100, 120, 100+20*prop, 120);
+    wx += dx;
+    wy += dy;
+    prop = std::sqrt((float)(wx - p1.x) * (wx - p1.x) + (wy - p1.y) * (wy - p1.y));
+    prop = prop / len;
+  }
+  // int tCoord[3][2];
+  // int prec = cube.precision;
+  // int angle = 90;
+  // int row = num / (360 / prec);
+  // int col = num % (360 / prec);
+
+  // int sline = (90 - angle / 2) / prec - 1;
+  // if (row < sline) return;
+  // int eline = (90 + angle / 2) / prec - 1;
+  // if (row > eline) return;
 }
 
 /**

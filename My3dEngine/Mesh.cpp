@@ -70,7 +70,7 @@ void g3::loadCube(g3::TriangleMesh& mesh)
 {
   float tR, r;
   float x, y, z;
-  int uratio = 5;
+  int uratio = mesh.precision = BALL_PRECISION;
   int N = 180 / uratio;
   int M = 360 / uratio;
   COLORREF col = RGB(0xFF, 0xFF, 0xFF);

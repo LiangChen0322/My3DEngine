@@ -12,6 +12,7 @@
 #define PI    (3.1415926535898 / 180)
 #define A_PI  (180 / 3.1415926535898)
 #define COS15 (float)(0.9659258)
+#define BALL_PRECISION  5
 
 
 namespace g3 {
@@ -33,9 +34,10 @@ struct Triangle {
  * Stores an indexed triangle mesh with N vertices and M triangles.
  */
 struct TriangleMesh {
-  Vec3 center;
-  Vec3 loc;
+  Vec3   center;
+  Vec3   loc;
   double R;
+  int    precision;
 
   unsigned int nVertices;
   std::unique_ptr<Vertex[]> vertices;
